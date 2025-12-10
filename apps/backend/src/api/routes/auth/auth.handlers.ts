@@ -122,8 +122,8 @@ export const refreshTokenHandler: AppRouteHandler<RefreshTokenRoute> = async (
     );
   }
 
-  const userId = parseInt(payload.sub);
-  if (isNaN(userId)) {
+  const userId = payload.sub;
+  if (!userId || typeof userId !== "string") {
     return c.json(
       {
         success: false,

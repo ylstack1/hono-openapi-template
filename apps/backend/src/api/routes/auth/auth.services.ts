@@ -36,11 +36,11 @@ export async function authenticateUser(
 
 export async function getUserById(
   db: DrizzleD1WithSchema,
-  id: number,
+  id: string,
 ): Promise<Result<DrizzleZod_Users_Select | undefined>> {
   return await tryCatch(
     db.query.users.findFirst({
-      where: (fields, operators) => operators.and(operators.eq(fields.id, id)),
+      where: (fields, operators) => operators.eq(fields.id, id),
     }),
   );
 }

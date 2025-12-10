@@ -32,9 +32,9 @@ export const authMiddleware = () => {
       }
 
       const db = c.get("drizzle");
-      const userId = parseInt(payload.sub);
+      const userId = payload.sub;
 
-      if (isNaN(userId)) {
+      if (!userId || typeof userId !== "string") {
         return c.json(
           { error: true, message: UNAUTHORIZED_MESSAGE },
           UNAUTHORIZED_CODE,
