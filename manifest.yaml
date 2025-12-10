@@ -1,0 +1,609 @@
+# BaaS Workers Manifest
+# This file defines the data model, features, and policies for your Backend-as-a-Service platform.
+# The manifest drives code generation, API routing, and runtime behavior.
+
+# =============================================================================
+# FEATURE FLAGS
+# =============================================================================
+# Enable or disable platform features
+features:
+  # Authentication & Authorization
+  auth:
+    enabled: true
+    # JWT-based authentication with refresh tokens
+    providers:
+      - phone_password # Phone number + password authentication
+      - email_password # Email + password authentication (future)
+
+  # Durable Objects for stateful services
+  durableObjects:
+    enabled: false
+    # When enabled, allows defining DO-backed entities
+    # Useful for real-time features, counters, rate limiting, etc.
+
+  # Real-time subscriptions (future)
+  realtime:
+    enabled: false
+
+  # File storage via R2
+  storage:
+    enabled: false
+
+  # Scheduled jobs/cron
+  cron:
+    enabled: false
+
+# =============================================================================
+# DATA MODEL
+# =============================================================================
+# Define your entities (database tables) and their schemas
+entities:
+  # ---------------------------------------------------------------------------
+  # Store Entity
+  # Represents a merchant/business store
+  # ---------------------------------------------------------------------------
+  - name: Store
+    # Table name in the database
+    tableName: stores
+    # Human-readable description
+    description: Merchant store or business entity
+    # Fields/columns
+    fields:
+      - name: id
+        type: uuid
+        primary: true
+        generated: true
+        description: Unique store identifier
+
+      - name: name
+        type: string
+        required: true
+        maxLength: 255
+        description: Store name
+
+      - name: ownerId
+        type: uuid
+        required: true
+        references: User.id
+        description: User who owns this store
+
+      - name: description
+        type: text
+        required: false
+        description: Store description
+
+      - name: logo
+        type: string
+        required: false
+        description: URL to store logo
+
+      - name: status
+        type: enum
+        values: [active, inactive, suspended]
+        default: active
+        description: Store operational status
+
+      - name: createdAt
+        type: timestamp
+        generated: true
+        description: When the store was created
+
+      - name: updatedAt
+        type: timestamp
+        generated: true
+        updated: true
+        description: When the store was last updated
+
+    # API endpoints to generate
+    api:
+      list: true # GET /stores
+      get: true # GET /stores/:id
+      create: true # POST /stores
+      update: true # PATCH /stores/:id
+      delete: true # DELETE /stores/:id
+
+    # Access control policies
+    policies:
+      # Anyone can list stores (public directory)
+      list: "public"
+      # Anyone can view a store
+      get: "public"
+      # Only authenticated users can create stores
+      create: "authenticated"
+      # Only the owner can update their store
+      update: "owner"
+      # Only the owner can delete their store
+      delete: "owner"
+
+  # ---------------------------------------------------------------------------
+  # User Entity
+  # Platform users (store owners, customers, admins)
+  # ---------------------------------------------------------------------------
+  - name: User
+    tableName: users
+    description: Platform user account
+    fields:
+      - name: id
+        type: uuid
+        primary: true
+        generated: true
+
+      - name: name
+        type: string
+        required: true
+        maxLength: 255
+
+      - name: email
+        type: string
+        required: false
+        unique: true
+        maxLength: 255
+        validation: email
+
+      - name: phoneNumber
+        type: string
+        required: true
+        unique: true
+        maxLength: 20
+
+      - name: passwordHash
+        type: string
+        required: true
+        sensitive: true # Never expose in API responses
+
+      - name: role
+        type: enum
+        values: [customer, merchant, admin]
+        default: customer
+
+      - name: emailVerified
+        type: boolean
+        default: false
+
+      - name: phoneVerified
+        type: boolean
+        default: false
+
+      - name: createdAt
+        type: timestamp
+        generated: true
+
+      - name: updatedAt
+        type: timestamp
+        generated: true
+        updated: true
+
+    api:
+      list: true
+      get: true
+      create: true
+      update: true
+      delete: true
+
+    policies:
+      # Only admins can list all users
+      list: "role:admin"
+      # Users can view their own profile, admins can view any
+      get: "owner || role:admin"
+      # Public registration
+      create: "public"
+      # Users can update their own profile
+      update: "owner"
+      # Only admins can delete users
+      delete: "role:admin"
+
+  # ---------------------------------------------------------------------------
+  # Product Entity
+  # Items sold in stores
+  # ---------------------------------------------------------------------------
+  - name: Product
+    tableName: products
+    description: Product or service offered by a store
+    fields:
+      - name: id
+        type: uuid
+        primary: true
+        generated: true
+
+      - name: storeId
+        type: uuid
+        required: true
+        references: Store.id
+        onDelete: cascade
+
+      - name: typeId
+        type: uuid
+        required: false
+        references: ProductType.id
+        description: Optional product categorization
+
+      - name: name
+        type: string
+        required: true
+        maxLength: 255
+
+      - name: description
+        type: text
+        required: false
+
+      - name: price
+        type: decimal
+        required: true
+        precision: 10
+        scale: 2
+        description: Price in the smallest currency unit (e.g., cents)
+
+      - name: currency
+        type: string
+        required: true
+        default: "USD"
+        maxLength: 3
+
+      - name: inventory
+        type: integer
+        required: false
+        description: Stock quantity (null = unlimited)
+
+      - name: images
+        type: json
+        required: false
+        description: Array of image URLs
+
+      - name: metadata
+        type: json
+        required: false
+        description: Custom product attributes
+
+      - name: status
+        type: enum
+        values: [draft, active, archived]
+        default: draft
+
+      - name: createdAt
+        type: timestamp
+        generated: true
+
+      - name: updatedAt
+        type: timestamp
+        generated: true
+        updated: true
+
+    api:
+      list: true
+      get: true
+      create: true
+      update: true
+      delete: true
+
+    policies:
+      # Anyone can browse products
+      list: "public"
+      get: "public"
+      # Only store owners can create products for their store
+      create: "authenticated && store.owner"
+      update: "store.owner"
+      delete: "store.owner"
+
+  # ---------------------------------------------------------------------------
+  # ProductType Entity
+  # Product categories/types
+  # ---------------------------------------------------------------------------
+  - name: ProductType
+    tableName: product_types
+    description: Product category or type
+    fields:
+      - name: id
+        type: uuid
+        primary: true
+        generated: true
+
+      - name: name
+        type: string
+        required: true
+        unique: true
+        maxLength: 100
+
+      - name: description
+        type: text
+        required: false
+
+      - name: parentId
+        type: uuid
+        required: false
+        references: ProductType.id
+        description: For hierarchical categories
+
+      - name: createdAt
+        type: timestamp
+        generated: true
+
+      - name: updatedAt
+        type: timestamp
+        generated: true
+        updated: true
+
+    api:
+      list: true
+      get: true
+      create: true
+      update: true
+      delete: true
+
+    policies:
+      list: "public"
+      get: "public"
+      # Only admins can manage product types
+      create: "role:admin"
+      update: "role:admin"
+      delete: "role:admin"
+
+  # ---------------------------------------------------------------------------
+  # Order Entity
+  # Customer orders/purchases
+  # ---------------------------------------------------------------------------
+  - name: Order
+    tableName: orders
+    description: Customer order or purchase
+    fields:
+      - name: id
+        type: uuid
+        primary: true
+        generated: true
+
+      - name: storeId
+        type: uuid
+        required: true
+        references: Store.id
+
+      - name: customerId
+        type: uuid
+        required: true
+        references: User.id
+
+      - name: status
+        type: enum
+        values:
+          [
+            pending,
+            confirmed,
+            processing,
+            shipped,
+            delivered,
+            cancelled,
+            refunded,
+          ]
+        default: pending
+
+      - name: items
+        type: json
+        required: true
+        description: Array of order items with productId, quantity, price
+
+      - name: subtotal
+        type: decimal
+        required: true
+        precision: 10
+        scale: 2
+
+      - name: tax
+        type: decimal
+        required: false
+        precision: 10
+        scale: 2
+
+      - name: shipping
+        type: decimal
+        required: false
+        precision: 10
+        scale: 2
+
+      - name: total
+        type: decimal
+        required: true
+        precision: 10
+        scale: 2
+
+      - name: currency
+        type: string
+        required: true
+        default: "USD"
+        maxLength: 3
+
+      - name: shippingAddress
+        type: json
+        required: false
+
+      - name: billingAddress
+        type: json
+        required: false
+
+      - name: paymentMethod
+        type: string
+        required: false
+        maxLength: 50
+
+      - name: paymentStatus
+        type: enum
+        values: [pending, paid, failed, refunded]
+        default: pending
+
+      - name: notes
+        type: text
+        required: false
+
+      - name: createdAt
+        type: timestamp
+        generated: true
+
+      - name: updatedAt
+        type: timestamp
+        generated: true
+        updated: true
+
+    api:
+      list: true
+      get: true
+      create: true
+      update: true
+      delete: false # Orders typically shouldn't be deleted
+
+    policies:
+      # Users can list their own orders, merchants can list orders for their stores
+      list: "owner || store.owner"
+      # Users can view their own orders, merchants can view orders for their stores
+      get: "owner || store.owner"
+      # Authenticated users can create orders
+      create: "authenticated"
+      # Merchants can update order status, customers can cancel
+      update: "store.owner || (owner && status:pending)"
+      delete: "role:admin"
+
+  # ---------------------------------------------------------------------------
+  # License Entity
+  # Software licenses or digital product keys
+  # ---------------------------------------------------------------------------
+  - name: License
+    tableName: licenses
+    description: Digital license or product key
+    fields:
+      - name: id
+        type: uuid
+        primary: true
+        generated: true
+
+      - name: productId
+        type: uuid
+        required: true
+        references: Product.id
+
+      - name: orderId
+        type: uuid
+        required: false
+        references: Order.id
+        description: Order that generated this license
+
+      - name: userId
+        type: uuid
+        required: true
+        references: User.id
+        description: License owner
+
+      - name: key
+        type: string
+        required: true
+        unique: true
+        maxLength: 255
+        sensitive: true
+        description: License key or token
+
+      - name: status
+        type: enum
+        values: [active, suspended, expired, revoked]
+        default: active
+
+      - name: activatedAt
+        type: timestamp
+        required: false
+        description: When the license was first activated
+
+      - name: expiresAt
+        type: timestamp
+        required: false
+        description: License expiration date (null = no expiration)
+
+      - name: maxActivations
+        type: integer
+        required: false
+        description: Maximum number of activations allowed
+
+      - name: activationCount
+        type: integer
+        default: 0
+        description: Current number of activations
+
+      - name: metadata
+        type: json
+        required: false
+        description: Additional license data
+
+      - name: createdAt
+        type: timestamp
+        generated: true
+
+      - name: updatedAt
+        type: timestamp
+        generated: true
+        updated: true
+
+    api:
+      list: true
+      get: true
+      create: true
+      update: true
+      delete: true
+
+    policies:
+      # Users can list their own licenses, store owners can list licenses for their products
+      list: "owner || product.store.owner"
+      # Users can view their own licenses
+      get: "owner"
+      # Only store owners can create licenses
+      create: "product.store.owner"
+      # Store owners can update license status
+      update: "product.store.owner"
+      # Only admins can delete licenses
+      delete: "role:admin"
+
+# =============================================================================
+# GLOBAL POLICIES
+# =============================================================================
+# Define reusable policy functions
+policies:
+  # Check if the requester is the resource owner
+  owner: |
+    function(context, resource) {
+      return context.user.id === resource.userId || 
+             context.user.id === resource.ownerId ||
+             context.user.id === resource.customerId;
+    }
+
+  # Check if the requester owns the related store
+  storeOwner: |
+    function(context, resource) {
+      const store = context.db.getStore(resource.storeId);
+      return store && store.ownerId === context.user.id;
+    }
+
+  # Check if the user has a specific role
+  hasRole: |
+    function(context, role) {
+      return context.user && context.user.role === role;
+    }
+
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+config:
+  # API versioning
+  apiVersion: "v1"
+
+  # Default pagination
+  pagination:
+    defaultLimit: 20
+    maxLimit: 100
+
+  # Rate limiting (requests per minute)
+  rateLimit:
+    authenticated: 100
+    anonymous: 20
+
+  # CORS settings
+  cors:
+    allowedOrigins: ["*"]
+    allowedMethods: ["GET", "POST", "PATCH", "DELETE"]
+    allowedHeaders: ["Content-Type", "Authorization"]
+
+  # JWT settings
+  jwt:
+    accessTokenExpiry: "15m"
+    refreshTokenExpiry: "7d"

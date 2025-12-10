@@ -1,91 +1,577 @@
-# 🚀 hono-openapi-template - Easy Setup for Cloudflare Workers
+# 🚀 BaaS Workers - Backend-as-a-Service on Cloudflare
 
-[![Download](https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip%20Now-Click%20Here-blue)](https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip)
+A modern, type-safe Backend-as-a-Service (BaaS) platform built on Cloudflare Workers, featuring manifest-driven development, strict TypeScript, and full API documentation.
 
-## 📖 Description
-hono-openapi-template is a type-safe and production-ready boilerplate for Cloudflare Workers. It uses Hono for routing, Zod for validation, Drizzle ORM for database interaction, and OpenAPI for creating clear and usable APIs. This template allows you to get started quickly with modern TypeScript tools, making it perfect for your next project.
+## 📖 Overview
 
-## ⚙️ System Requirements
-- **Operating System:** Windows, macOS, or Linux
-- **https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip Version:** Recommended 14.x or higher
-- **Cloudflare Workers Account:** Required for deployment
+BaaS Workers is a monorepo-based backend platform that provides:
 
-## 🚀 Getting Started
-To get started with hono-openapi-template, follow these steps:
+- **Manifest-Driven Architecture**: Define your data model, policies, and features in a single YAML file
+- **Type-Safe Development**: Strict TypeScript with ESM modules across all packages
+- **Cloudflare Workers**: Serverless, globally distributed, with D1, KV, R2, and Durable Objects support
+- **OpenAPI-First**: Auto-generated API documentation with Scalar UI
+- **Production Ready**: Built-in auth, logging, validation, and error handling
 
-1. **Visit the Releases Page**  
-   Go to the [Releases Page](https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip) to find the latest version of the software.
+## 🏗️ Monorepo Structure
 
-2. **Choose Your Version**  
-   Look for the most recent version. It will usually be marked as the latest release. Click on it to open the release details.
+```
+baas-workers/
+├── apps/
+│   └── backend/              # Main Cloudflare Worker application
+│       ├── src/              # Source code
+│       │   ├── api/          # API routes (auth, records, etc.)
+│       │   ├── config/       # Configuration & environment
+│       │   ├── db/           # Drizzle ORM schema & migrations
+│       │   ├── lib/          # Shared utilities
+│       │   ├── types/        # TypeScript types
+│       │   └── app.ts        # Application entry point
+│       ├── wrangler.toml     # Cloudflare Workers config
+│       ├── drizzle.config.ts # Database migrations config
+│       └── package.json
+│
+├── packages/
+│   ├── usecore/              # Core utilities & shared logic
+│   ├── plugins/              # Plugin system (extensibility)
+│   └── cli/                  # CLI tools for management
+│
+├── manifest.yaml             # Data model, policies, features
+├── tsconfig.base.json        # Shared TypeScript config
+├── pnpm-workspace.yaml       # pnpm workspace definition
+├── Dockerfile                # Local development with Miniflare
+├── .env.example              # Environment variables template
+└── package.json              # Root workspace scripts
+```
 
-3. **Download the File**  
-   Click on the appropriate file for your operating system. It should be clearly labeled to help you choose the correct version.
+## ⚙️ Prerequisites
 
-## 📥 Download & Install
-To download and install the application, follow these steps:
+- **Node.js**: v20 or higher
+- **pnpm**: v8 or higher
+- **Cloudflare Account**: For deployment (free tier available)
+- **Docker**: (Optional) For containerized development
 
-1. **Visit the Releases Page**  
-   Head over to the [Releases Page](https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip).
+## 🚀 Quick Start
 
-2. **Select Your Download**  
-   Find the file that suits your needs and click the link to download it.
+### 1. Clone & Install
 
-3. **Unzip the File (if necessary)**  
-   If the downloaded file is in a zip format, right-click on it and select "Extract All." This will create a folder with the application's contents.
+```bash
+# Clone the repository
+git clone <repository-url>
+cd baas-workers
 
-4. **Run the Application**  
-   Navigate to the folder you just unzipped. Look for a file named `start` or `run` and double-click it to start your application.
+# Install dependencies
+pnpm install
+```
 
-5. **Follow On-Screen Instructions**  
-   The app will guide you through the setup process. Just follow the prompts to get everything ready for use.
+### 2. Configure Environment
 
-## 🌟 Features
-- **Type-Safe Code:** Eliminate common errors while coding with TypeScript.
-- **Flexible Database Options:** Use Drizzle ORM to interact with databases in a straightforward way.
-- **OpenAPI Support:** Easily create and document REST APIs that are clear and user-friendly.
-- **Integrated Validation:** Zod offers a strong validation layer to ensure data integrity.
-- **Quick Deployment:** Get started fast with a ready-to-use configuration for Cloudflare Workers.
+```bash
+# Copy the environment template
+cp .env.example .dev.vars
 
-## 🔍 Topics
-- boilerplate
-- cloudflare
-- cloudflare-workers
-- d1-database
-- drizzle-orm
-- hono
-- honojs
-- open-source
-- openapi
-- rest-api
-- scalar-docs
-- sqlite
-- type-safe
-- typescript
-- zod
-- zod-validation
+# Edit .dev.vars and set:
+# - JWT_SECRET (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+# - CLOUDFLARE_ACCOUNT_ID (from Cloudflare dashboard)
+# - Other variables as needed
+```
 
-## ⚙️ Troubleshooting
-If you encounter any issues during installation or running the software, try the following:
+### 3. Initialize Database
 
-1. **Check https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip Version**  
-   Ensure that you are using the correct version of https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip as mentioned in the system requirements.
+```bash
+# Generate Drizzle migrations from schema
+pnpm --filter @baas-workers/backend db:generate
 
-2. **Look for Dependencies**  
-   Some features may require additional packages. Check the documentation in the folder you downloaded for any dependency instructions.
+# Run migrations locally
+pnpm migrate
 
-3. **Consult the Community**  
-   Visit the project's GitHub Issues page to see if others have faced similar problems, or ask your question there.
+# (Optional) Seed with sample data
+pnpm seed
+```
+
+### 4. Start Development Server
+
+```bash
+# Run backend worker with hot reload
+pnpm dev
+
+# The API will be available at:
+# - http://localhost:8787
+# - API docs: http://localhost:8787/docs
+# - OpenAPI spec: http://localhost:8787/openapi.json
+```
+
+## 📦 Available Commands
+
+### Root Workspace Commands
+
+```bash
+# Development
+pnpm dev                    # Run backend worker in dev mode
+pnpm build                  # Build all packages
+
+# Database
+pnpm migrate                # Run migrations (local)
+pnpm migrate:prod           # Run migrations (production)
+pnpm seed                   # Seed database with sample data
+
+# Code Quality
+pnpm lint                   # Lint all packages
+pnpm lint:fix               # Fix linting issues
+pnpm format                 # Format code with Prettier
+pnpm format:check           # Check code formatting
+pnpm typecheck              # Type check all packages
+
+# Deployment
+pnpm deploy:workers         # Deploy backend to Cloudflare
+```
+
+### Backend-Specific Commands
+
+```bash
+# Run from root with filter
+pnpm --filter @baas-workers/backend <command>
+
+# Or navigate to apps/backend
+cd apps/backend
+
+# Development
+pnpm dev                    # Start wrangler dev server
+
+# Database
+pnpm db:generate            # Generate migrations
+pnpm db:migrate:local       # Apply migrations locally
+pnpm db:migrate:prod        # Apply migrations to production
+pnpm db:inspect:local       # Inspect local database tables
+pnpm db:seed:local          # Seed local database
+pnpm db:dump:local          # Dump local database contents
+pnpm db:studio              # Open Drizzle Studio (production)
+pnpm db:studio:local        # Open Drizzle Studio (local)
+pnpm db:reset:local         # Reset local database (⚠️ destructive)
+
+# Deployment
+pnpm deploy                 # Deploy to Cloudflare Workers
+pnpm cf-typegen             # Generate TypeScript types for bindings
+```
+
+## 🐳 Docker Development
+
+Run the entire platform in a container:
+
+```bash
+# Build the Docker image
+docker build -t baas-workers .
+
+# Run with volume mounting for live reload
+docker run -p 8787:8787 -p 8788:8788 \
+  -v $(pwd):/app \
+  -v /app/node_modules \
+  baas-workers
+
+# Or use docker-compose (create docker-compose.yml)
+docker-compose up
+```
+
+## 🗺️ Manifest-Driven Development
+
+The `manifest.yaml` file is the heart of the platform. It defines:
+
+### Feature Flags
+
+```yaml
+features:
+  auth:
+    enabled: true
+    providers:
+      - phone_password
+  durableObjects:
+    enabled: false
+  storage:
+    enabled: false
+```
+
+### Data Model (Entities)
+
+```yaml
+entities:
+  - name: Store
+    tableName: stores
+    fields:
+      - name: id
+        type: uuid
+        primary: true
+      - name: name
+        type: string
+        required: true
+    api:
+      list: true
+      get: true
+      create: true
+      update: true
+      delete: true
+    policies:
+      list: "public"
+      create: "authenticated"
+      update: "owner"
+```
+
+### Access Policies
+
+Policies control who can access what:
+
+- `public`: Anyone (no authentication)
+- `authenticated`: Any logged-in user
+- `owner`: Only the resource owner
+- `role:admin`: Only users with admin role
+- Custom logic: Define reusable policy functions
+
+## 🔑 Environment Variables
+
+Key environment variables (see `.env.example` for full list):
+
+| Variable                | Description        | Example                   |
+| ----------------------- | ------------------ | ------------------------- |
+| `NODE_ENV`              | Environment        | `development`             |
+| `JWT_SECRET`            | JWT signing key    | Generate with crypto      |
+| `LOG_LEVEL`             | Logging verbosity  | `debug`, `info`, `error`  |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account | From dashboard            |
+| `CLOUDFLARE_API_TOKEN`  | API token          | From dashboard            |
+| `D1_DATABASE_ID`        | D1 database ID     | Auto-set in wrangler.toml |
+
+### Local Development Variables
+
+For local development, create `.dev.vars` in the backend directory:
+
+```bash
+# apps/backend/.dev.vars
+JWT_SECRET=your-secret-here
+LOG_LEVEL=debug
+```
+
+### Production Variables
+
+Set production variables in the Cloudflare dashboard:
+
+1. Workers & Pages → Your Worker → Settings → Variables
+2. Add each variable (they're encrypted at rest)
+
+## 🔐 Authentication
+
+Built-in JWT authentication with phone/password:
+
+```bash
+# Register a user
+curl -X POST http://localhost:8787/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John","phoneNumber":"1234567890","password":"secret123"}'
+
+# Login
+curl -X POST http://localhost:8787/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"phoneNumber":"1234567890","password":"secret123"}'
+
+# Returns:
+# {
+#   "accessToken": "eyJ...",
+#   "refreshToken": "eyJ..."
+# }
+
+# Use access token in subsequent requests
+curl -X GET http://localhost:8787/auth/me \
+  -H "Authorization: Bearer eyJ..."
+```
+
+## 📊 Database Management
+
+### Drizzle ORM
+
+The backend uses Drizzle ORM with Cloudflare D1:
+
+```typescript
+// apps/backend/src/db/schema.ts
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey(),
+  name: text("name").notNull(),
+  phoneNumber: text("phone_number").notNull().unique(),
+});
+```
+
+### Migrations Workflow
+
+```bash
+# 1. Modify schema in src/db/schema.ts
+# 2. Generate migration
+pnpm --filter @baas-workers/backend db:generate
+
+# 3. Review migration in src/db/migrations/
+# 4. Apply locally
+pnpm migrate
+
+# 5. Test your changes
+pnpm dev
+
+# 6. Apply to production
+pnpm migrate:prod
+```
+
+### Database Bindings
+
+D1 is bound via `wrangler.toml`:
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "demo"
+database_id = "your-database-id"
+migrations_dir = "./src/db/migrations"
+```
+
+Access in code:
+
+```typescript
+// Injected via middleware
+app.use("*", async (c, next) => {
+  c.set("db", drizzle(c.env.DB));
+  await next();
+});
+
+// Use in routes
+const db = c.get("db");
+const users = await db.select().from(usersTable);
+```
+
+## 🧪 Testing
+
+```bash
+# Run tests (when configured)
+pnpm test
+
+# Type checking (runs across all packages)
+pnpm typecheck
+
+# Linting
+pnpm lint
+```
+
+## 🚢 Deployment
+
+### Deploying to Cloudflare Workers
+
+```bash
+# 1. Login to Cloudflare
+pnpm wrangler login
+
+# 2. Create D1 database (first time only)
+pnpm wrangler d1 create demo
+
+# 3. Update wrangler.toml with database_id
+# Copy the database_id from the previous command
+
+# 4. Run migrations on production
+pnpm migrate:prod
+
+# 5. Deploy worker
+pnpm deploy:workers
+
+# Your API is now live at:
+# https://baas-backend.<your-subdomain>.workers.dev
+```
+
+### CI/CD
+
+The repository includes GitHub Actions/GitLab CI configuration:
+
+- Runs linting, type checking, and tests on every push
+- Deploys to production on merge to main
+- Requires `CLOUDFLARE_API_TOKEN` secret
+
+## 📚 API Documentation
+
+### Accessing Docs
+
+- **Scalar UI**: http://localhost:8787/docs (interactive)
+- **OpenAPI JSON**: http://localhost:8787/openapi.json
+
+### API Structure
+
+```
+/                           # API metadata
+/docs                       # Interactive API docs
+/openapi.json               # OpenAPI 3.0 spec
+
+/auth/*                     # Authentication endpoints
+  POST   /auth/login
+  POST   /auth/refresh
+  GET    /auth/me
+
+/records/*                  # Example CRUD endpoints
+  GET    /records
+  POST   /records
+  GET    /records/:id
+  PATCH  /records/:id
+  DELETE /records/:id
+```
+
+### Adding New Endpoints
+
+1. Create route file in `apps/backend/src/api/routes/`
+2. Define OpenAPI schema with `@hono/zod-openapi`
+3. Implement handler and service layer
+4. Register in `apps/backend/src/app.ts`
+
+Example:
+
+```typescript
+// apps/backend/src/api/routes/stores.ts
+import { createRoute } from "@hono/zod-openapi";
+import { z } from "zod";
+
+const listStoresRoute = createRoute({
+  method: "get",
+  path: "/stores",
+  tags: ["Stores"],
+  summary: "List all stores",
+  responses: {
+    200: {
+      description: "List of stores",
+      content: {
+        "application/json": {
+          schema: z.array(
+            z.object({
+              id: z.string(),
+              name: z.string(),
+            }),
+          ),
+        },
+      },
+    },
+  },
+});
+```
+
+## 🔧 Configuration
+
+### TypeScript Configuration
+
+- **Base Config**: `tsconfig.base.json` - Shared strict settings
+- **Per-Package Config**: Each package extends the base config
+- **Strict Mode**: Enabled workspace-wide with ESM modules
+
+### ESLint & Prettier
+
+- **ESLint**: Configured in `eslint.config.mjs`
+  - TypeScript rules
+  - Perfectionist (sorting)
+  - Unicorn (best practices)
+- **Prettier**: Standard formatting
+- **Husky**: Pre-commit hooks for linting/formatting
+
+### Git Hooks
+
+```bash
+# Installed via husky
+.husky/pre-commit          # Runs lint-staged
+.husky/pre-push            # (Optional) Runs tests
+```
+
+## 📦 Package Management
+
+### Workspace Dependencies
+
+Link workspace packages:
+
+```json
+{
+  "dependencies": {
+    "@baas-workers/usecore": "workspace:*"
+  }
+}
+```
+
+### Adding Dependencies
+
+```bash
+# Add to specific package
+pnpm --filter @baas-workers/backend add hono
+
+# Add to root (devDependencies)
+pnpm add -D -w typescript
+
+# Add to all packages
+pnpm -r add lodash
+```
+
+## 🐛 Troubleshooting
+
+### Port Already in Use
+
+```bash
+# Kill process on port 8787
+lsof -ti:8787 | xargs kill -9
+```
+
+### Database Migrations Failing
+
+```bash
+# Reset local database
+pnpm --filter @baas-workers/backend db:reset:local
+
+# Regenerate migrations
+pnpm --filter @baas-workers/backend db:generate
+
+# Apply again
+pnpm migrate
+```
+
+### TypeScript Errors
+
+```bash
+# Clean build artifacts
+find . -name ".tsbuildinfo" -delete
+find . -name "dist" -type d -exec rm -rf {} +
+
+# Reinstall dependencies
+pnpm install
+```
+
+### Wrangler Login Issues
+
+```bash
+# Clear wrangler auth
+pnpm wrangler logout
+
+# Re-authenticate
+pnpm wrangler login
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/my-feature`
+3. Make your changes
+4. Run checks: `pnpm lint && pnpm typecheck`
+5. Commit: `git commit -m "feat: add my feature"`
+6. Push: `git push origin feat/my-feature`
+7. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Resources
+
+- [Cloudflare Workers Docs](https://developers.cloudflare.com/workers/)
+- [Hono Framework](https://hono.dev/)
+- [Drizzle ORM](https://orm.drizzle.team/)
+- [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
+- [pnpm Workspaces](https://pnpm.io/workspaces)
 
 ## 📞 Support
-If you need additional help, feel free to reach out through the Issues section of the repository. Other users and maintainers can provide assistance.
 
-## 🔄 Contributing
-To contribute to this project, please fork the repository and submit a pull request with your changes. If you have suggestions for new features or improvements, feel free to open an issue.
+- **Issues**: [GitHub Issues](https://github.com/yourusername/baas-workers/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/baas-workers/discussions)
+- **Discord**: [Join our community](#)
 
-## 🔗 Additional Links
-- [Documentation](https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip)
-- [GitHub Issues](https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip)
-- [License](https://raw.githubusercontent.com/sestore/hono-openapi-template/main/vaward/hono-openapi-template.zip)
+---
 
-Thank you for trying out hono-openapi-template! We hope it meets your needs and helps you build amazing applications on Cloudflare Workers.
+**Built with ❤️ using Cloudflare Workers, Hono, and TypeScript**

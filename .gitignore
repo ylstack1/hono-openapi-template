@@ -1,5 +1,6 @@
 # prod
 dist/
+build/
 
 # dev
 .yarn/
@@ -14,11 +15,14 @@ dist/
 # deps
 node_modules/
 .wrangler
+**/node_modules/
+**/.wrangler/
 
 # env
 .env
 .env.production
 .dev.vars
+**/.dev.vars
 
 # logs
 logs/
@@ -34,9 +38,14 @@ lerna-debug.log*
 
 # sqlite
 dev.db
+*.db
+*.db-shm
+*.db-wal
 
 # llms
 repomix-output.xml
 
 # ts
 .tsbuildinfo
+**/.tsbuildinfo
+*.tsbuildinfo

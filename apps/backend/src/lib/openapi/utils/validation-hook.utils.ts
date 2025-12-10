@@ -16,4 +16,5 @@ export const openApiValidationHook: Hook<any, any, any, any> = (result, c) => {
       UNPROCESSABLE_ENTITY_CODE,
     );
   }
+  return undefined;
 };
