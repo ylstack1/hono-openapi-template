@@ -131,7 +131,7 @@ export function createEntityDispatchHandler(): AppRouteHandler<any> {
           if (!validationResult.success) {
             return c.json(
               {
-                errors: validationResult.error.issues.map((issue) => ({
+                issues: validationResult.error.issues.map((issue) => ({
                   field: (issue.path || []).join(".") || "root",
                   message: issue.message,
                   code: issue.code,
@@ -174,7 +174,7 @@ export function createEntityDispatchHandler(): AppRouteHandler<any> {
           if (!validationResult.success) {
             return c.json(
               {
-                errors: validationResult.error.issues.map((issue) => ({
+                issues: validationResult.error.issues.map((issue) => ({
                   field: (issue.path || []).join(".") || "root",
                   message: issue.message,
                   code: issue.code,
@@ -211,10 +211,12 @@ export function createEntityDispatchHandler(): AppRouteHandler<any> {
           return c.json({ error: "Method not allowed" }, 405);
       }
     } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       logger.error(
         {
-          error: error instanceof Error ? error.message : String(error),
-        },
+          error: errorMessage,
+        } as Record<string, unknown>,
         `Failed to handle ${method} /api/${entityName}`,
       );
       return c.json(

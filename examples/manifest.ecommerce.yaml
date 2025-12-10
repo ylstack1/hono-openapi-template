@@ -1,0 +1,149 @@
+# E-commerce Config
+# Use case: Online Store, Digital Products, Marketplace
+metadata:
+  name: "BaaS E-commerce"
+  version: "1.0.0"
+  description: "Complete e-commerce backend configuration"
+
+features:
+  auth:
+    enabled: true
+    providers: ["phone_password", "email_password"]
+  durableObjects:
+    enabled: true # For inventory locking / carts
+  storage:
+    enabled: true # Product images
+
+entities:
+  - name: "Store"
+    tableName: "stores"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "ownerId"
+        type: "uuid"
+        required: true
+      - name: "slug"
+        type: "string"
+        required: true
+        unique: true
+    policies:
+      list: "public"
+      get: "public"
+      create: "authenticated"
+      update: "owner"
+      delete: "owner"
+
+  - name: "Product"
+    tableName: "products"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "storeId"
+        type: "uuid"
+        required: true
+        references: "Store.id"
+      - name: "sku"
+        type: "string"
+        required: true
+        unique: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "price"
+        type: "decimal"
+        required: true
+        precision: 10
+        scale: 2
+      - name: "inventory"
+        type: "integer"
+        default: 0
+      - name: "weight"
+        type: "decimal"
+        precision: 8
+        scale: 2
+      - name: "imageUrl"
+        type: "string"
+    policies:
+      list: "public"
+      get: "public"
+      create: "role:seller"
+      update: "owner" # Owner of the store
+      delete: "owner"
+
+  - name: "Order"
+    tableName: "orders"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "customerId"
+        type: "uuid"
+        required: true
+      - name: "total"
+        type: "decimal"
+        required: true
+        precision: 12
+        scale: 2
+      - name: "status"
+        type: "enum"
+        values: ["pending", "paid", "shipped", "delivered", "cancelled"]
+        default: "pending"
+      - name: "createdAt"
+        type: "timestamp"
+        generated: true
+    policies:
+      list: "owner || role:admin"
+      get: "owner || role:admin"
+      create: "authenticated"
+      update: "role:admin" # Only admin can update status manually via API
+      delete: "role:admin"
+
+  - name: "Cart"
+    tableName: "carts"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "userId"
+        type: "uuid"
+        required: true
+        unique: true
+      - name: "items"
+        type: "json" # Stores array of { productId, quantity }
+        default: "[]"
+    policies:
+      list: "owner"
+      get: "owner"
+      create: "owner"
+      update: "owner"
+      delete: "owner"
+
+  - name: "Customer"
+    tableName: "customers"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "userId"
+        type: "uuid"
+        required: true
+        unique: true
+      - name: "shippingAddress"
+        type: "json"
+      - name: "billingAddress"
+        type: "json"
+    policies:
+      get: "owner"
+      update: "owner"
+      create: "owner"

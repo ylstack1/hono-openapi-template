@@ -1,0 +1,56 @@
+# Minimal Config
+# Use case: Simple Static Site, Portfolio
+metadata:
+  name: "Minimal CMS"
+  version: "1.0.0"
+  description: "Simple content API"
+
+features:
+  auth:
+    enabled: false
+  durableObjects:
+    enabled: false
+
+entities:
+  - name: "Page"
+    tableName: "pages"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "slug"
+        type: "string"
+        required: true
+        unique: true
+      - name: "title"
+        type: "string"
+        required: true
+      - name: "content"
+        type: "text"
+    policies:
+      list: "public"
+      get: "public"
+      # Create/Update/Delete managed via direct DB access or separate admin tool in this minimal setup
+      create: "public" # Open for demo purposes
+      update: "public"
+      delete: "public"
+
+  - name: "Author"
+    tableName: "authors"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "bio"
+        type: "text"
+    policies:
+      list: "public"
+      get: "public"
+      create: "public"
+      update: "public"
+      delete: "public"
