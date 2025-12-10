@@ -1,3 +1,4 @@
+import type { Engine } from "@baas-workers/usecore";
 import type {
   OpenAPIHono,
   RouteConfig,
@@ -16,12 +17,16 @@ export type DrizzleD1WithSchema = DrizzleD1Database<typeof schema>;
 export type AppBindings = {
   Bindings: {
     DB: D1Database;
+    KV?: KVNamespace;
+    R2?: R2Bucket;
+    JWT_SECRET?: string;
   };
   Variables: {
     drizzle: DrizzleD1WithSchema;
     logger: PinoLogger;
     jwtPayload?: JWTPayload;
     currentUser?: DrizzleZod_Users_Select;
+    engine?: Engine;
   };
 };
 

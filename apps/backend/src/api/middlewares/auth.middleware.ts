@@ -15,8 +15,9 @@ import { env } from "@/config/env";
 export const authMiddleware = () => {
   return createMiddleware<AppBindings>(async (c, next) => {
     try {
+      const secret = env.JWT_SECRET || "default-dev-secret";
       const jwtHandler = jwt({
-        secret: env.JWT_SECRET,
+        secret,
       });
 
       //* Throws if JWT is invalid/missing/expired
@@ -32,9 +33,9 @@ export const authMiddleware = () => {
       }
 
       const db = c.get("drizzle");
-      const userId = parseInt(payload.sub);
+      const userId = payload.sub;
 
-      if (isNaN(userId)) {
+      if (!userId || typeof userId !== "string") {
         return c.json(
           { error: true, message: UNAUTHORIZED_MESSAGE },
           UNAUTHORIZED_CODE,

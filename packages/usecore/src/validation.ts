@@ -5,6 +5,9 @@ export interface EntityField {
   type: string;
   required?: boolean;
   unique?: boolean;
+  primary?: boolean;
+  generated?: boolean;
+  updated?: boolean;
   maxLength?: number;
   minLength?: number;
   min?: number;
@@ -15,6 +18,10 @@ export interface EntityField {
   sensitive?: boolean;
   validation?: string;
   references?: string;
+  onDelete?: string;
+  precision?: number;
+  scale?: number;
+  description?: string;
 }
 
 export interface EntityDefinition {

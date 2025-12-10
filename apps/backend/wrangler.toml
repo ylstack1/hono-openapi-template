@@ -10,15 +10,17 @@ database_name = "demo"
 database_id = "8883f49a-44f7-423f-8e0f-5e3e7db8daaf"
 migrations_dir = "./src/db/migrations"
 
-# KV Namespaces (optional - uncomment when needed)
-# [[kv_namespaces]]
-# binding = "KV"
-# id = "your-kv-namespace-id"
+# KV Namespaces
+[[kv_namespaces]]
+binding = "KV"
+id = "demo-kv"
+preview_id = "demo-kv-preview"
 
-# R2 Buckets (optional - uncomment when needed)
-# [[r2_buckets]]
-# binding = "R2"
-# bucket_name = "your-bucket-name"
+# R2 Buckets
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "demo-bucket"
+preview_bucket_name = "demo-bucket-preview"
 
 # Durable Objects (optional - uncomment when needed)
 # [[durable_objects.bindings]]

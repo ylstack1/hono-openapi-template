@@ -4,10 +4,12 @@ import { secureHeaders } from "hono/secure-headers";
 
 import { notFoundHandler } from "@/api/middlewares/404.middleware";
 import { dbMiddleware } from "@/api/middlewares/db.middleware";
+import { engineMiddleware } from "@/api/middlewares/engine.middleware";
 import { errorHandler } from "@/api/middlewares/error.middleware";
 import { faviconMiddleware } from "@/api/middlewares/favicon.middleware";
 import { loggerMiddleware } from "@/api/middlewares/logger.middleware";
 import { isProduction } from "@/config/constants";
+import { createEntityDispatchHandler } from "@/lib/factories/create-entity-dispatcher";
 import { createOpenApiRouter } from "@/lib/factories/create-openapi-router";
 import { registerOpenApiSpec } from "@/lib/integrations/register-openapi-spec";
 import { registerScalarUI } from "@/lib/integrations/register-scalar-ui";
@@ -37,6 +39,7 @@ export function createApplication() {
     .use(faviconMiddleware())
     .use(loggerMiddleware())
     .use(dbMiddleware())
+    .use(engineMiddleware())
 
     // Error & 404 handlers
     .onError(errorHandler())
@@ -45,6 +48,14 @@ export function createApplication() {
   // Register API docs
   registerOpenApiSpec(app);
   registerScalarUI(app);
+
+  // Register dynamic entity dispatcher for /api/* routes
+  const entityDispatcher = createEntityDispatchHandler();
+  app.get("/api/:entity/:id", entityDispatcher);
+  app.get("/api/:entity", entityDispatcher);
+  app.post("/api/:entity", entityDispatcher);
+  app.patch("/api/:entity/:id", entityDispatcher);
+  app.delete("/api/:entity/:id", entityDispatcher);
 
   return app;
 }

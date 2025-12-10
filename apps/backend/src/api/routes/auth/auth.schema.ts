@@ -1,7 +1,10 @@
 import { z } from "@hono/zod-openapi";
 
 const userSchema = z.object({
-  id: z.number().openapi({ example: 1 }),
+  id: z
+    .string()
+    .uuid()
+    .openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
   phoneNumber: z.string().openapi({ example: "+1234567890" }),
   name: z.string().openapi({ example: "John Doe" }),
 });
