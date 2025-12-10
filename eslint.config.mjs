@@ -10,14 +10,16 @@ export default [
   prettier,
   {
     ignores: [
-      "**/node_modules/*",
-      "**/dist/*",
-      "**/apps/backend/src/db/migrations/*",
-      "pnpm-lock.yaml",
-      "**/worker-configuration.d.ts",
-      "**/.wrangler/*",
+      "**/node_modules/**",
+      "**/dist/**",
       "**/.tsbuildinfo",
+      "**/.wrangler/**",
+      "**/apps/backend/src/db/migrations/*",
+      "**/worker-configuration.d.ts",
+      "pnpm-lock.yaml",
     ],
+  },
+  {
     plugins: {
       perfectionist,
       unicorn,
@@ -41,6 +43,16 @@ export default [
       // TypeScript
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+  // Admin package - allow PascalCase for React components and hooks
+  {
+    files: ["packages/admin/**/*.{ts,tsx}"],
+    plugins: {
+      unicorn,
+    },
+    rules: {
+      "unicorn/filename-case": "off",
     },
   },
 ];
