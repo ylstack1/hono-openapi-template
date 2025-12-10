@@ -34,6 +34,7 @@ baas-workers/
 │   ├── plugins/              # Plugin system (extensibility)
 │   └── cli/                  # CLI tools for management
 │
+├── examples/                 # Production-ready manifest examples
 ├── manifest.yaml             # Data model, policies, features
 ├── tsconfig.base.json        # Shared TypeScript config
 ├── pnpm-workspace.yaml       # pnpm workspace definition
@@ -98,6 +99,27 @@ pnpm dev
 # - API docs: http://localhost:8787/docs
 # - OpenAPI spec: http://localhost:8787/openapi.json
 ```
+
+## 🌟 Quick Start with Examples
+
+We provide several production-ready manifest configurations in the `examples/` directory.
+
+To use an example:
+
+1.  Browse `examples/` to find a configuration that matches your use case (e.g., E-commerce, CMS, SaaS).
+2.  Copy the content to your project's `manifest.yaml`.
+3.  Update your `apps/backend/src/config/manifest.ts` to load this configuration (if not using dynamic loading).
+4.  Run migrations to create the new tables.
+
+**Available Examples:**
+
+- **CMS**: `examples/manifest.cms.yaml`
+- **E-commerce**: `examples/manifest.ecommerce.yaml`
+- **SaaS Platform**: `examples/manifest.saas.yaml`
+- **Social Network**: `examples/manifest.social.yaml`
+- **Minimal**: `examples/manifest.minimal.yaml`
+
+See [examples/README.md](examples/README.md) for more details.
 
 ## 📦 Available Commands
 
@@ -170,9 +192,9 @@ docker run -p 8787:8787 -p 8788:8788 \
 docker-compose up
 ```
 
-## 🗺️ Manifest-Driven Development
+## 🗺️ Manifest Configuration Guide
 
-The `manifest.yaml` file is the heart of the platform. It defines:
+The `manifest.yaml` file is the heart of the platform. It defines your data model, access policies, and enabled features.
 
 ### Feature Flags
 
@@ -180,15 +202,18 @@ The `manifest.yaml` file is the heart of the platform. It defines:
 features:
   auth:
     enabled: true
-    providers:
-      - phone_password
+    providers: ["phone_password", "email_password"]
   durableObjects:
     enabled: false
   storage:
-    enabled: false
+    enabled: true # Enable R2 storage
+  cron:
+    enabled: true # Enable scheduled tasks
 ```
 
 ### Data Model (Entities)
+
+Define your database schema using entities.
 
 ```yaml
 entities:
@@ -198,30 +223,68 @@ entities:
       - name: id
         type: uuid
         primary: true
+        generated: true
       - name: name
         type: string
         required: true
-    api:
-      list: true
-      get: true
-      create: true
-      update: true
-      delete: true
+        maxLength: 255
+      - name: ownerId
+        type: uuid
+        required: true
+        references: "User.id" # Foreign key
     policies:
       list: "public"
       create: "authenticated"
       update: "owner"
+      delete: "owner"
 ```
 
 ### Access Policies
 
 Policies control who can access what:
 
-- `public`: Anyone (no authentication)
+- `public`: Anyone (no authentication required)
 - `authenticated`: Any logged-in user
-- `owner`: Only the resource owner
-- `role:admin`: Only users with admin role
-- Custom logic: Define reusable policy functions
+- `owner`: Only the resource owner (checks `ownerId` field)
+- `role:admin`: Only users with 'admin' role
+- `member`: Custom policy (e.g., workspace member)
+
+## 🚢 Deployment Checklist
+
+Before deploying to production, ensure you have completed the following:
+
+1.  **Type Check & Build**
+
+    ```bash
+    pnpm typecheck
+    pnpm build
+    ```
+
+    Ensure there are no TypeScript errors and the build succeeds.
+
+2.  **Environment Variables**
+    Set production secrets in Cloudflare Dashboard or via Wrangler:
+
+    ```bash
+    wrangler secret put JWT_SECRET
+    ```
+
+3.  **Database Migration**
+    Apply your schema to the production D1 database:
+
+    ```bash
+    pnpm migrate:prod
+    ```
+
+4.  **Security Audit**
+    - [ ] Verify `JWT_SECRET` is strong and not committed to git.
+    - [ ] Ensure all sensitive entities have proper RBAC policies.
+    - [ ] Check that SQL queries use parameterized inputs (handled by Drizzle).
+
+5.  **Deploy**
+    ```bash
+    pnpm deploy:workers
+    ```
 
 ## 🔑 Environment Variables
 
@@ -485,93 +548,6 @@ Link workspace packages:
   "dependencies": {
     "@baas-workers/usecore": "workspace:*"
   }
+  // ...
 }
 ```
-
-### Adding Dependencies
-
-```bash
-# Add to specific package
-pnpm --filter @baas-workers/backend add hono
-
-# Add to root (devDependencies)
-pnpm add -D -w typescript
-
-# Add to all packages
-pnpm -r add lodash
-```
-
-## 🐛 Troubleshooting
-
-### Port Already in Use
-
-```bash
-# Kill process on port 8787
-lsof -ti:8787 | xargs kill -9
-```
-
-### Database Migrations Failing
-
-```bash
-# Reset local database
-pnpm --filter @baas-workers/backend db:reset:local
-
-# Regenerate migrations
-pnpm --filter @baas-workers/backend db:generate
-
-# Apply again
-pnpm migrate
-```
-
-### TypeScript Errors
-
-```bash
-# Clean build artifacts
-find . -name ".tsbuildinfo" -delete
-find . -name "dist" -type d -exec rm -rf {} +
-
-# Reinstall dependencies
-pnpm install
-```
-
-### Wrangler Login Issues
-
-```bash
-# Clear wrangler auth
-pnpm wrangler logout
-
-# Re-authenticate
-pnpm wrangler login
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feat/my-feature`
-3. Make your changes
-4. Run checks: `pnpm lint && pnpm typecheck`
-5. Commit: `git commit -m "feat: add my feature"`
-6. Push: `git push origin feat/my-feature`
-7. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔗 Resources
-
-- [Cloudflare Workers Docs](https://developers.cloudflare.com/workers/)
-- [Hono Framework](https://hono.dev/)
-- [Drizzle ORM](https://orm.drizzle.team/)
-- [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [pnpm Workspaces](https://pnpm.io/workspaces)
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/baas-workers/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/baas-workers/discussions)
-- **Discord**: [Join our community](#)
-
----
-
-**Built with ❤️ using Cloudflare Workers, Hono, and TypeScript**

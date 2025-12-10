@@ -6,11 +6,11 @@ export interface KVOptions {
   metadata?: Record<string, unknown>;
 }
 
-export interface SessionData {
+export interface SessionData<T = Record<string, unknown>> {
   userId: string;
   createdAt: number;
   expiresAt: number;
-  metadata?: Record<string, unknown>;
+  metadata?: T;
 }
 
 export interface CacheOptions extends KVOptions {
@@ -66,22 +66,22 @@ export class KVClient {
   }
 }
 
-export class SessionStore {
+export class SessionStore<T = Record<string, unknown>> {
   private readonly namespace = "session";
 
   constructor(private readonly kv: KVNamespace) {}
 
   async create(
     sessionId: string,
-    data: Omit<SessionData, "createdAt">,
+    data: Omit<SessionData<T>, "createdAt">,
     ttlSeconds?: number,
-  ): Promise<Result<SessionData>> {
+  ): Promise<Result<SessionData<T>>> {
     return await tryCatch(async () => {
       const now = Date.now();
-      const sessionData: SessionData = {
+      const sessionData: SessionData<T> = {
         ...data,
         createdAt: now,
-      };
+      } as SessionData<T>;
 
       const key = this.getKey(sessionId);
       const ttl = ttlSeconds || this.getTTLFromExpiration(data.expiresAt);
@@ -94,7 +94,7 @@ export class SessionStore {
     });
   }
 
-  async get(sessionId: string): Promise<Result<SessionData | null>> {
+  async get(sessionId: string): Promise<Result<SessionData<T> | null>> {
     return await tryCatch(async () => {
       const key = this.getKey(sessionId);
       const value = await this.kv.get(key, "text");
@@ -103,7 +103,7 @@ export class SessionStore {
         return null;
       }
 
-      const session = JSON.parse(value) as SessionData;
+      const session = JSON.parse(value) as SessionData<T>;
 
       if (session.expiresAt && session.expiresAt < Date.now()) {
         await this.kv.delete(key);
@@ -116,15 +116,15 @@ export class SessionStore {
 
   async update(
     sessionId: string,
-    data: Partial<Omit<SessionData, "userId" | "createdAt">>,
-  ): Promise<Result<SessionData | null>> {
+    data: Partial<Omit<SessionData<T>, "userId" | "createdAt">>,
+  ): Promise<Result<SessionData<T> | null>> {
     return await tryCatch(async () => {
       const existingResult = await this.get(sessionId);
       if (existingResult.error || !existingResult.data) {
         return null;
       }
 
-      const updated: SessionData = {
+      const updated: SessionData<T> = {
         ...existingResult.data,
         ...data,
       };
@@ -150,7 +150,7 @@ export class SessionStore {
   async rotate(
     oldSessionId: string,
     newSessionId: string,
-  ): Promise<Result<SessionData | null>> {
+  ): Promise<Result<SessionData<T> | null>> {
     return await tryCatch(async () => {
       const existingResult = await this.get(oldSessionId);
       if (existingResult.error || !existingResult.data) {
@@ -174,7 +174,7 @@ export class SessionStore {
   async extend(
     sessionId: string,
     additionalSeconds: number,
-  ): Promise<Result<SessionData | null>> {
+  ): Promise<Result<SessionData<T> | null>> {
     return await tryCatch(async () => {
       const existingResult = await this.get(sessionId);
       if (existingResult.error || !existingResult.data) {
@@ -315,8 +315,10 @@ export function createKVClient(kv: KVNamespace): KVClient {
   return new KVClient(kv);
 }
 
-export function createSessionStore(kv: KVNamespace): SessionStore {
-  return new SessionStore(kv);
+export function createSessionStore<T = Record<string, unknown>>(
+  kv: KVNamespace,
+): SessionStore<T> {
+  return new SessionStore<T>(kv);
 }
 
 export function createCacheClient(kv: KVNamespace): CacheClient {

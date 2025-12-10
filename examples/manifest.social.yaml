@@ -1,0 +1,141 @@
+# Social Platform Config
+# Use case: Social Network, Community Forum
+metadata:
+  name: "BaaS Social"
+  version: "1.0.0"
+  description: "Social networking backend configuration"
+
+features:
+  auth:
+    enabled: true
+    providers: ["email_password", "phone_password"]
+  realtime:
+    enabled: true # Websockets for chat/notifications
+  durableObjects:
+    enabled: true
+
+entities:
+  - name: "UserProfile"
+    tableName: "user_profiles"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "userId"
+        type: "uuid"
+        required: true
+        unique: true
+      - name: "bio"
+        type: "text"
+        maxLength: 500
+      - name: "avatarUrl"
+        type: "string"
+      - name: "followersCount"
+        type: "integer"
+        default: 0
+      - name: "followingCount"
+        type: "integer"
+        default: 0
+    policies:
+      get: "public"
+      update: "owner"
+      create: "authenticated"
+
+  - name: "Post"
+    tableName: "posts"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "userId"
+        type: "uuid"
+        required: true
+      - name: "content"
+        type: "text"
+        required: true
+        maxLength: 1000
+      - name: "visibility"
+        type: "enum"
+        values: ["public", "followers", "private"]
+        default: "public"
+      - name: "likesCount"
+        type: "integer"
+        default: 0
+      - name: "createdAt"
+        type: "timestamp"
+        generated: true
+    policies:
+      list: "public"
+      get: "public" # Needs filtering logic for 'followers' visibility
+      create: "authenticated"
+      update: "owner"
+      delete: "owner || role:admin"
+
+  - name: "Comment"
+    tableName: "comments"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "postId"
+        type: "uuid"
+        required: true
+        references: "Post.id"
+      - name: "userId"
+        type: "uuid"
+        required: true
+      - name: "content"
+        type: "text"
+        required: true
+        maxLength: 300
+    policies:
+      list: "public"
+      create: "authenticated"
+      delete: "owner || post_owner"
+
+  - name: "Follow"
+    tableName: "follows"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "followerId"
+        type: "uuid"
+        required: true
+      - name: "followingId"
+        type: "uuid"
+        required: true
+      - name: "createdAt"
+        type: "timestamp"
+        generated: true
+    policies:
+      create: "authenticated"
+      delete: "owner"
+      list: "public"
+
+  - name: "Notification"
+    tableName: "notifications"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "userId"
+        type: "uuid"
+        required: true
+      - name: "type"
+        type: "enum"
+        values: ["like", "comment", "follow", "mention"]
+      - name: "read"
+        type: "boolean"
+        default: false
+      - name: "data"
+        type: "json"
+    policies:
+      list: "owner"
+      update: "owner" # Mark as read
+      create: "system" # Only system creates notifications

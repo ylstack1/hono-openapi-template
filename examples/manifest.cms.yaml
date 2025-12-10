@@ -1,0 +1,156 @@
+# Headless CMS Config
+# Use case: Blog, News Site, Corporate Website
+metadata:
+  name: "My Headless CMS"
+  version: "1.0.0"
+  description: "A flexible headless CMS for content management"
+
+features:
+  auth:
+    enabled: true
+    providers: ["phone_password", "email_password"]
+  durableObjects:
+    enabled: false
+  storage:
+    enabled: true # For media uploads
+
+entities:
+  - name: "BlogPost"
+    tableName: "blog_posts"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "title"
+        type: "string"
+        required: true
+        maxLength: 200
+      - name: "slug"
+        type: "string"
+        required: true
+        unique: true
+        maxLength: 200
+      - name: "content"
+        type: "text" # Rich text content
+        required: true
+      - name: "status"
+        type: "enum"
+        values: ["draft", "published", "archived"]
+        default: "draft"
+      - name: "authorId"
+        type: "uuid"
+        required: true
+        references: "Author.id"
+      - name: "publishedAt"
+        type: "timestamp"
+        required: false
+      - name: "createdAt"
+        type: "timestamp"
+        generated: true
+      - name: "updatedAt"
+        type: "timestamp"
+        generated: true
+        updated: true
+    policies:
+      list: "public"
+      get: "public"
+      create: "role:editor || role:admin"
+      update: "owner || role:admin"
+      delete: "role:admin"
+
+  - name: "Category"
+    tableName: "categories"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "name"
+        type: "string"
+        required: true
+        unique: true
+      - name: "slug"
+        type: "string"
+        required: true
+        unique: true
+    policies:
+      list: "public"
+      get: "public"
+      create: "role:admin"
+      update: "role:admin"
+      delete: "role:admin"
+
+  - name: "Author"
+    tableName: "authors"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "userId"
+        type: "uuid"
+        required: true
+        unique: true
+        # Links to the system User entity
+      - name: "bio"
+        type: "text"
+      - name: "avatarUrl"
+        type: "string"
+    policies:
+      list: "public"
+      get: "public"
+      create: "authenticated"
+      update: "owner"
+      delete: "role:admin"
+
+  - name: "Media"
+    tableName: "media_files"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "filename"
+        type: "string"
+        required: true
+      - name: "url"
+        type: "string"
+        required: true
+      - name: "mimeType"
+        type: "string"
+      - name: "size"
+        type: "integer"
+    policies:
+      list: "authenticated"
+      get: "public"
+      create: "role:editor || role:admin"
+      delete: "role:admin"
+
+  - name: "Comment"
+    tableName: "comments"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "postId"
+        type: "uuid"
+        required: true
+        references: "BlogPost.id"
+      - name: "userId"
+        type: "uuid"
+        required: true
+        # System user
+      - name: "content"
+        type: "text"
+        required: true
+      - name: "isApproved"
+        type: "boolean"
+        default: true
+    policies:
+      list: "public"
+      get: "public"
+      create: "authenticated"
+      update: "owner"
+      delete: "owner || role:admin"

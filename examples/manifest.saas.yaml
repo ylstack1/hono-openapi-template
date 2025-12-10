@@ -1,0 +1,133 @@
+# SaaS / Multi-tenant Config
+# Use case: B2B SaaS, Project Management Tool
+metadata:
+  name: "BaaS SaaS Platform"
+  version: "1.0.0"
+  description: "Multi-tenant SaaS configuration"
+
+features:
+  auth:
+    enabled: true
+    providers: ["email_password", "oauth_google"]
+  durableObjects:
+    enabled: true
+  cron:
+    enabled: true # For subscription billing checks
+
+entities:
+  - name: "Workspace"
+    tableName: "workspaces"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "plan"
+        type: "enum"
+        values: ["free", "pro", "enterprise"]
+        default: "free"
+      - name: "ownerId"
+        type: "uuid"
+        required: true
+    policies:
+      list: "authenticated" # Users list their workspaces
+      get: "member" # Custom policy logic required for 'member' or use role check
+      create: "authenticated"
+      update: "owner"
+      delete: "owner"
+
+  - name: "TeamMember"
+    tableName: "team_members"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "workspaceId"
+        type: "uuid"
+        required: true
+        references: "Workspace.id"
+      - name: "userId"
+        type: "uuid"
+        required: true
+      - name: "role"
+        type: "enum"
+        values: ["admin", "member", "viewer"]
+        default: "member"
+    policies:
+      list: "workspace_member"
+      create: "workspace_admin"
+      delete: "workspace_admin"
+
+  - name: "Project"
+    tableName: "projects"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "workspaceId"
+        type: "uuid"
+        required: true
+        references: "Workspace.id"
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "status"
+        type: "string"
+    policies:
+      list: "workspace_member"
+      get: "workspace_member"
+      create: "workspace_member"
+      update: "workspace_member"
+      delete: "workspace_admin"
+
+  - name: "Document"
+    tableName: "documents"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "projectId"
+        type: "uuid"
+        required: true
+        references: "Project.id"
+      - name: "title"
+        type: "string"
+        required: true
+      - name: "content"
+        type: "text"
+      - name: "createdBy"
+        type: "uuid"
+        required: true
+    policies:
+      list: "project_access"
+      get: "project_access"
+      create: "project_access"
+      update: "owner || workspace_admin"
+      delete: "owner || workspace_admin"
+
+  - name: "Subscription"
+    tableName: "subscriptions"
+    fields:
+      - name: "id"
+        type: "uuid"
+        primary: true
+        generated: true
+      - name: "workspaceId"
+        type: "uuid"
+        required: true
+        unique: true
+      - name: "stripeId"
+        type: "string"
+      - name: "status"
+        type: "string"
+      - name: "currentPeriodEnd"
+        type: "timestamp"
+    policies:
+      get: "workspace_admin"
+      update: "role:admin" # System admin only
