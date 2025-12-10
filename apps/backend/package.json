@@ -14,7 +14,7 @@
     "db:migrate:prod": "wrangler d1 migrations apply demo --remote",
     "db:inspect:local": "wrangler d1 execute demo --local --command=\"SELECT name FROM sqlite_master WHERE type='table';\"",
     "db:inspect:prod": "wrangler d1 execute demo --remote --command=\"SELECT name FROM sqlite_master WHERE type='table';\"",
-    "db:seed:local": "node --loader tsx ./scripts/seed.ts",
+    "db:seed:local": "wrangler d1 execute demo --local --file ./scripts/seed.sql",
     "db:dump:local": "wrangler d1 execute demo --local --command=\"SELECT * FROM users; SELECT * FROM records; SELECT * FROM stores; SELECT * FROM products;\"",
     "db:studio": "drizzle-kit studio",
     "db:studio:local": "drizzle-kit studio --config=drizzle.local.config.ts",

@@ -51,10 +51,12 @@ export const loginHandler: AppRouteHandler<LoginRoute> = async (c) => {
     );
   }
 
+  const secret = env.JWT_SECRET || "default-dev-secret";
+
   const { data: accessToken, error: accessTokenError } =
     await generateAccessToken({
       user,
-      secret: env.JWT_SECRET,
+      secret,
       expiresInMinutes: 15,
     });
 
@@ -71,7 +73,7 @@ export const loginHandler: AppRouteHandler<LoginRoute> = async (c) => {
   const { data: refreshToken, error: refreshTokenError } =
     await generateRefreshToken({
       user,
-      secret: env.JWT_SECRET,
+      secret,
       expiresInDays: 30,
     });
 
@@ -107,9 +109,11 @@ export const refreshTokenHandler: AppRouteHandler<RefreshTokenRoute> = async (
   const { refreshToken } = c.req.valid("json");
   const db = c.get("drizzle");
 
+  const secret = env.JWT_SECRET || "default-dev-secret";
+
   const { data: payload, error: verifyError } = await verifyRefreshToken(
     refreshToken,
-    env.JWT_SECRET,
+    secret,
   );
 
   if (verifyError) {
@@ -148,7 +152,7 @@ export const refreshTokenHandler: AppRouteHandler<RefreshTokenRoute> = async (
   const { data: newAccessToken, error: accessTokenError } =
     await generateAccessToken({
       user,
-      secret: env.JWT_SECRET,
+      secret,
       expiresInMinutes: 15,
     });
 
@@ -165,7 +169,7 @@ export const refreshTokenHandler: AppRouteHandler<RefreshTokenRoute> = async (
   const { data: newRefreshToken, error: refreshTokenError } =
     await generateRefreshToken({
       user,
-      secret: env.JWT_SECRET,
+      secret,
       expiresInDays: 30,
     });
 

@@ -30,7 +30,9 @@ export const engineMiddleware = () => {
             DB: c.env.DB,
             KV: c.env.KV,
             R2: c.env.R2,
-            JWT_SECRET: (c.env as any).JWT_SECRET as string | undefined,
+            JWT_SECRET: (c.env as unknown as Record<string, unknown>)[
+              "JWT_SECRET"
+            ] as string | undefined,
           },
           logger,
         );
@@ -43,9 +45,12 @@ export const engineMiddleware = () => {
       return await next();
     } catch (error) {
       const logger = c.get("logger");
-      logger.error("Failed to initialize engine", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      logger.error(
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "Failed to initialize engine",
+      );
       return c.json(
         {
           error: "Internal Server Error",

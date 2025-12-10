@@ -15,8 +15,9 @@ import { env } from "@/config/env";
 export const authMiddleware = () => {
   return createMiddleware<AppBindings>(async (c, next) => {
     try {
+      const secret = env.JWT_SECRET || "default-dev-secret";
       const jwtHandler = jwt({
-        secret: env.JWT_SECRET,
+        secret,
       });
 
       //* Throws if JWT is invalid/missing/expired

@@ -35,7 +35,7 @@ export function createEngineFactory(
   const r2Client = env.R2 ? createR2Client(env.R2) : undefined;
 
   // Create auth client if auth is enabled
-  const sessionStore = kvClient ? createSessionStore(kvClient) : undefined;
+  const sessionStore = env.KV ? createSessionStore(env.KV) : undefined;
   const authClient = manifest.features?.auth?.enabled
     ? createAuthClient(
         {

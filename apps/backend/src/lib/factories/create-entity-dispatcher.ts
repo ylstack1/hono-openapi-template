@@ -12,6 +12,7 @@ import type { AppRouteHandler } from "@/types";
  * Create a catch-all handler that dispatches entity requests to the engine
  * Supports: GET /api/:entity, POST /api/:entity, GET /api/:entity/:id, PATCH /api/:entity/:id, DELETE /api/:entity/:id
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createEntityDispatchHandler(): AppRouteHandler<any> {
   return async (c) => {
     const engine = c.get("engine");
@@ -58,7 +59,8 @@ export function createEntityDispatchHandler(): AppRouteHandler<any> {
     // Try to get user ID from current user if available
     const currentUser = c.get("currentUser");
     if (currentUser && typeof currentUser === "object" && "id" in currentUser) {
-      userId = String((currentUser as any).id);
+      const user = currentUser as Record<string, unknown>;
+      userId = String(user["id"]);
     }
 
     try {
@@ -118,7 +120,7 @@ export function createEntityDispatchHandler(): AppRouteHandler<any> {
           let body: Record<string, unknown> = {};
           try {
             body = await c.req.json();
-          } catch (_error) {
+          } catch {
             // Body parsing failed, continue with empty object
           }
 
@@ -129,10 +131,10 @@ export function createEntityDispatchHandler(): AppRouteHandler<any> {
           if (!validationResult.success) {
             return c.json(
               {
-                errors: validationResult.error.errors.map((e) => ({
-                  field: e.path.join("."),
-                  message: e.message,
-                  code: e.code,
+                errors: validationResult.error.issues.map((issue) => ({
+                  field: (issue.path || []).join(".") || "root",
+                  message: issue.message,
+                  code: issue.code,
                 })),
               },
               UNPROCESSABLE_ENTITY_CODE,
@@ -161,7 +163,7 @@ export function createEntityDispatchHandler(): AppRouteHandler<any> {
           let body: Record<string, unknown> = {};
           try {
             body = await c.req.json();
-          } catch (_error) {
+          } catch {
             // Body parsing failed, continue with empty object
           }
 
@@ -172,10 +174,10 @@ export function createEntityDispatchHandler(): AppRouteHandler<any> {
           if (!validationResult.success) {
             return c.json(
               {
-                errors: validationResult.error.errors.map((e) => ({
-                  field: e.path.join("."),
-                  message: e.message,
-                  code: e.code,
+                errors: validationResult.error.issues.map((issue) => ({
+                  field: (issue.path || []).join(".") || "root",
+                  message: issue.message,
+                  code: issue.code,
                 })),
               },
               UNPROCESSABLE_ENTITY_CODE,
@@ -209,9 +211,12 @@ export function createEntityDispatchHandler(): AppRouteHandler<any> {
           return c.json({ error: "Method not allowed" }, 405);
       }
     } catch (error: unknown) {
-      logger.error(`Failed to handle ${method} /api/${entityName}`, {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      logger.error(
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        `Failed to handle ${method} /api/${entityName}`,
+      );
       return c.json(
         {
           error: "Internal Server Error",
