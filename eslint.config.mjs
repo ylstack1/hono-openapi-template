@@ -10,11 +10,13 @@ export default [
   prettier,
   {
     ignores: [
-      "node_modules/*",
-      "dist/*",
-      "src/db/migrations/*",
+      "**/node_modules/*",
+      "**/dist/*",
+      "**/apps/backend/src/db/migrations/*",
       "pnpm-lock.yaml",
-      "worker-configuration.d.ts",
+      "**/worker-configuration.d.ts",
+      "**/.wrangler/*",
+      "**/.tsbuildinfo",
     ],
     plugins: {
       perfectionist,

@@ -1,0 +1,31 @@
+name = "baas-backend"
+main = "src/app.ts"
+compatibility_date = "2025-09-15"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "demo"
+database_id = "8883f49a-44f7-423f-8e0f-5e3e7db8daaf"
+migrations_dir = "./src/db/migrations"
+
+# KV Namespaces (optional - uncomment when needed)
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "your-kv-namespace-id"
+
+# R2 Buckets (optional - uncomment when needed)
+# [[r2_buckets]]
+# binding = "R2"
+# bucket_name = "your-bucket-name"
+
+# Durable Objects (optional - uncomment when needed)
+# [[durable_objects.bindings]]
+# name = "DURABLE_OBJECT"
+# class_name = "DurableObjectClass"
+# script_name = "baas-backend"
+
+# [[migrations]]
+# tag = "v1"
+# new_classes = ["DurableObjectClass"]

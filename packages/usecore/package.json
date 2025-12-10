@@ -1,0 +1,18 @@
+{
+  "name": "@baas-workers/usecore",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Core utilities and shared logic for BaaS platform",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.1.9"
+  }
+}

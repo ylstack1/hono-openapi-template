@@ -1,0 +1,11 @@
+node_modules
+.git
+.github
+.wrangler
+.env
+.dev.vars
+dist
+*.log
+.tsbuildinfo
+screenshot_*.png
+vaward

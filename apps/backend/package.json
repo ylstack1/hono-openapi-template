@@ -1,0 +1,41 @@
+{
+  "name": "@baas-workers/backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend Cloudflare Worker for BaaS platform",
+  "type": "module",
+  "main": "src/app.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply demo --local",
+    "db:migrate:prod": "wrangler d1 migrations apply demo --remote",
+    "db:inspect:local": "wrangler d1 execute demo --local --command=\"SELECT name FROM sqlite_master WHERE type='table';\"",
+    "db:inspect:prod": "wrangler d1 execute demo --remote --command=\"SELECT name FROM sqlite_master WHERE type='table';\"",
+    "db:seed:local": "wrangler d1 execute demo --local --command=\"INSERT INTO records (text) VALUES ('My first record'); INSERT INTO users (name, phone_number, password_hash) VALUES ('Mohammed', '1234567890', 'x3Xnt1ft5jDNCqERO9ECZhqziCnKUqZCKreChi8mhkY=');\"",
+    "db:dump:local": "wrangler d1 execute demo --local --command=\"SELECT * FROM users; SELECT * FROM records;\"",
+    "db:studio": "drizzle-kit studio",
+    "db:studio:local": "drizzle-kit studio --config=drizzle.local.config.ts",
+    "db:reset:local": "rm -rf ./.wrangler/state/v3/d1/miniflare-D1DatabaseObject/* && rm -rf ./src/db/migrations"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "^1.1.2",
+    "@libsql/client": "^0.15.15",
+    "@scalar/hono-api-reference": "^0.9.19",
+    "better-sqlite3": "^12.4.1",
+    "catch-wrap": "^1.0.1",
+    "drizzle-orm": "^0.44.5",
+    "drizzle-zod": "^0.8.3",
+    "hono": "^4.9.7",
+    "hono-pino": "^0.10.2",
+    "http-stash": "^1.0.0",
+    "pino": "^9.10.0",
+    "zod": "^4.1.9"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "drizzle-kit": "^0.31.4"
+  }
+}
