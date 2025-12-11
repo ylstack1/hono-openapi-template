@@ -1,0 +1,22 @@
+name = "baas-workers-starter"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Cloudflare Workers configuration
+# Uncomment and configure when deploying to Cloudflare
+
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "baas-starter"
+# database_id = "YOUR_DATABASE_ID"
+
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "YOUR_KV_ID"
+
+# [[r2_buckets]]
+# binding = "R2"
+# bucket_name = "baas-files"
+
+# [vars]
+# ENVIRONMENT = "production"

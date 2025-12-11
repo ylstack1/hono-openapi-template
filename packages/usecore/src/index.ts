@@ -12,3 +12,6 @@ export * from "./kv";
 export * from "./r2";
 export * from "./sdk";
 export * from "./validation";
+export * from "./router";
+export * from "./migrations";
+export * from "./openapi";

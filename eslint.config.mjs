@@ -55,4 +55,11 @@ export default [
       "unicorn/filename-case": "off",
     },
   },
+  // Starter app - allow console.log for server startup logging
+  {
+    files: ["starter-app/**/*.ts"],
+    rules: {
+      "no-console": "off",
+    },
+  },
 ];
