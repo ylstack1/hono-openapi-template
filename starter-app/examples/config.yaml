@@ -1,0 +1,49 @@
+metadata:
+  name: My Store
+  version: 1.0.0
+  description: Starter app built with baas-workers
+
+features:
+  auth:
+    enabled: true
+    providers:
+      - phone_password
+  storage:
+    enabled: true
+
+entities:
+  - name: Product
+    tableName: products
+    fields:
+      - name: id
+        type: uuid
+        primary: true
+        generated: true
+      - name: name
+        type: string
+        required: true
+        maxLength: 100
+        minLength: 3
+        description: Product name
+      - name: price
+        type: decimal
+        required: true
+        min: 0
+        precision: 10
+        scale: 2
+      - name: category
+        type: enum
+        values:
+          - Electronics
+          - Clothing
+          - Books
+        default: Electronics
+      - name: createdAt
+        type: timestamp
+        generated: true
+    policies:
+      list: public
+      get: public
+      create: authenticated
+      update: authenticated
+      delete: authenticated

@@ -12,10 +12,30 @@ BaaS Workers is a monorepo-based backend platform that provides:
 - **OpenAPI-First**: Auto-generated API documentation with Scalar UI
 - **Production Ready**: Built-in auth, logging, validation, and error handling
 
+## 🎯 Quick Start: Starter Template
+
+**Want to build your own app?** Check out the [starter-app template](./starter-app/):
+
+```bash
+cd starter-app
+pnpm install
+pnpm dev
+```
+
+Edit `config.ts` → Get a full backend with API + docs + migrations. That's it!
+
+See [starter-app/README.md](./starter-app/README.md) for details.
+
 ## 🏗️ Monorepo Structure
 
 ```
 baas-workers/
+├── starter-app/              # 🎯 Starter template (start here!)
+│   ├── config.ts            # Single config file = full backend
+│   ├── src/                 # Application code
+│   ├── package.json         # Just 2 deps: usecore + admin
+│   └── README.md            # Quick start guide
+│
 ├── apps/
 │   └── backend/              # Main Cloudflare Worker application
 │       ├── src/              # Source code
@@ -30,7 +50,8 @@ baas-workers/
 │       └── package.json
 │
 ├── packages/
-│   ├── usecore/              # Core utilities & shared logic
+│   ├── usecore/              # Core utilities & backend factory
+│   ├── admin/                # React admin UI
 │   ├── plugins/              # Plugin system (extensibility)
 │   └── cli/                  # CLI tools for management
 │
